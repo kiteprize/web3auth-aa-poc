@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "biconomy": {
+      "type": "http",
+      "url": "https://docs.biconomy.io/mcp"
+    }
+  }
+}
