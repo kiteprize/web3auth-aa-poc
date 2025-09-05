@@ -26,14 +26,29 @@ export class BiconomyService implements IBiconomyService {
         throw new Error("No account found in wallet client");
       }
 
-      console.log("Initializing Biconomy with Fusion Mode for Web3Auth compatibility:", account);
-      console.log("Using Fusion Mode (no EIP-7702 required) for broad wallet compatibility");
+      console.log("Initializing Biconomy with EIP-7702 delegation for Web3Auth:", account);
+      console.log("Using LocalAccount-based EIP-7702 for full gas sponsorship support");
 
-      // Skip EIP-7702 authorization for Fusion Mode
-      this.authorization = null;
+      // Sign EIP-7702 authorization for delegation to Nexus implementation
+      console.log("Signing EIP-7702 authorization with LocalAccount...");
+      try {
+        this.authorization = await walletClient.signAuthorization({
+          contractAddress: NEXUS_IMPLEMENTATION as Address,
+          chainId: 0, // 0 means any chain for maximum flexibility
+        });
 
-      // Create nexus smart account for Fusion Mode
-      // Note: accountAddress should NOT be overridden for Fusion Mode
+        console.log("EIP-7702 authorization signed successfully:", {
+          contractAddress: NEXUS_IMPLEMENTATION,
+          chainId: this.authorization.chainId,
+          nonce: this.authorization.nonce,
+        });
+      } catch (authError) {
+        console.error("EIP-7702 authorization failed:", authError);
+        throw new Error(`EIP-7702 authorization failed: ${authError instanceof Error ? authError.message : 'Unknown error'}`);
+      }
+
+      // Create nexus account with EIP-7702 delegation
+      // Override accountAddress to use EOA for EIP-7702 flow
       const nexusAccount = await toMultichainNexusAccount({
         signer: walletClient as any,
         chainConfigurations: [
@@ -43,12 +58,12 @@ export class BiconomyService implements IBiconomyService {
             version: getMEEVersion(MEEVersion.V2_1_0),
           },
         ],
-        // Do NOT override accountAddress for Fusion Mode - let it create a separate smart account
+        accountAddress: account, // Use EOA address for EIP-7702 delegation
       });
 
-      console.log("Nexus smart account created for Fusion Mode:", {
-        smartAccountAddress: nexusAccount.addressOn(bsc.id),
-        ownerEOA: account,
+      console.log("Nexus account created with EIP-7702 delegation:", {
+        eoaAddress: account,
+        nexusAddress: nexusAccount.addressOn(bsc.id),
         chainId: bsc.id,
       });
 
@@ -57,13 +72,14 @@ export class BiconomyService implements IBiconomyService {
         apiKey: BICONOMY_CONFIG.apiKey,
       });
 
-      // For Fusion Mode, use the smart account address but store EOA for reference
-      this.accountAddress = nexusAccount.addressOn(bsc.id);
+      // For EIP-7702 flow, use the EOA address directly
+      this.accountAddress = account;
       
-      console.log("Biconomy MEE Client initialized with Fusion Mode:", {
-        smartAccountAddress: this.accountAddress,
+      console.log("Biconomy MEE Client initialized with EIP-7702:", {
+        eoaAddress: this.accountAddress,
         chainId: bsc.id,
-        mode: "Fusion (no EIP-7702 required)"
+        mode: "EIP-7702 delegation with LocalAccount",
+        hasAuthorization: !!this.authorization
       });
     } catch (error) {
       console.error("Failed to initialize Biconomy client:", error);
