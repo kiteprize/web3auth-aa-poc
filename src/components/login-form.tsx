@@ -3,8 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { COUNTRY_CODES, DEFAULT_COUNTRY } from "@/lib/phone/country-codes";
-import { PhoneNumberParser } from "@/lib/phone";
+import { COUNTRY_CODES } from "@/lib/phone/country-codes";
 import {
   useWeb3AuthConnect,
   useWeb3AuthDisconnect,
@@ -18,72 +17,73 @@ import {
   Phone,
   User,
 } from "lucide-react";
-import { useState } from "react";
+
+import { AuthServiceFactory, UserFormatter } from "@/lib/auth";
+import { LoginFormActions } from "@/components/forms/LoginFormActions";
+import { LoginFormStateManager } from "@/components/forms/LoginFormState";
 
 export default function LoginForm() {
   const { connectTo } = useWeb3AuthConnect();
   const { userInfo } = useWeb3AuthUser();
   const { disconnect } = useWeb3AuthDisconnect();
 
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<string>(
-    DEFAULT_COUNTRY.code
+  const stateManager = LoginFormStateManager.useLoginFormState();
+  const { showDropdown, selectedCountry, phoneNumber, email } = stateManager.getState();
+
+  const authService = AuthServiceFactory.createAuthService(connectTo, disconnect, userInfo);
+  const phoneService = AuthServiceFactory.createPhoneNumberService();
+  
+  const actions = new LoginFormActions(
+    authService,
+    phoneService,
+    () => stateManager.setShowDropdown(false)
   );
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
 
   const handleSmsLogin = async () => {
-    const countryData = COUNTRY_CODES.find(
-      (country) => country.code === selectedCountry
-    );
-    if (!countryData) {
-      console.error("Country not found");
-      return;
+    try {
+      const countryData = COUNTRY_CODES.find(
+        (country) => country.code === selectedCountry
+      );
+      if (!countryData) {
+        console.error("Country not found");
+        return;
+      }
+      await actions.handleSmsLogin(countryData, phoneNumber);
+    } catch (error) {
+      console.error("SMS login failed:", error);
     }
-
-    const web3AuthFormattedNumber = PhoneNumberParser.formatForWeb3Auth(
-      countryData,
-      phoneNumber
-    );
-    await connectTo("auth", {
-      authConnection: "sms_passwordless",
-      loginHint: web3AuthFormattedNumber,
-    });
-    setShowDropdown(false);
   };
 
   const handleEmailLogin = async () => {
-    await connectTo("auth", {
-      authConnection: "email_passwordless",
-      loginHint: email,
-    });
-    setShowDropdown(false);
+    try {
+      await actions.handleEmailLogin(email);
+    } catch (error) {
+      console.error("Email login failed:", error);
+    }
   };
 
   const handleGoogleLogin = async () => {
-    await connectTo("auth", {
-      authConnection: "google",
-    });
-    setShowDropdown(false);
+    try {
+      await actions.handleGoogleLogin();
+    } catch (error) {
+      console.error("Google login failed:", error);
+    }
   };
 
   const handleAppleLogin = async () => {
-    await connectTo("auth", {
-      authConnection: "apple",
-    });
-    setShowDropdown(false);
+    try {
+      await actions.handleAppleLogin();
+    } catch (error) {
+      console.error("Apple login failed:", error);
+    }
   };
 
   const handleLogout = async () => {
-    await disconnect();
-    setShowDropdown(false);
-  };
-
-  const shortenUserId = (userId: string | undefined) => {
-    if (!userId) return "";
-    return userId.length > 20
-      ? `${userId.slice(0, 8)}...${userId.slice(-8)}`
-      : userId;
+    try {
+      await actions.handleLogout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -92,12 +92,12 @@ export default function LoginForm() {
         <div className='flex items-center gap-2'>
           <Button
             variant='ghost'
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={() => stateManager.setShowDropdown(!showDropdown)}
             className='flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-700'
           >
             <User className='w-4 h-4' />
             <span className='hidden sm:inline text-sm'>
-              {shortenUserId(userInfo.userId)}
+              {UserFormatter.shortenUserId(userInfo.userId)}
             </span>
             <ChevronDown className='w-3 h-3' />
           </Button>
@@ -130,7 +130,7 @@ export default function LoginForm() {
         <div className='flex items-center gap-2'>
           <Button
             variant='default'
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={() => stateManager.setShowDropdown(!showDropdown)}
             className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700'
           >
             <User className='w-4 h-4' />
@@ -203,7 +203,7 @@ export default function LoginForm() {
                     <div className='flex flex-1 border border-gray-600 rounded-md overflow-hidden bg-gray-900'>
                       <select
                         value={selectedCountry}
-                        onChange={(e) => setSelectedCountry(e.target.value)}
+                        onChange={(e) => stateManager.setSelectedCountry(e.target.value)}
                         className='bg-gray-800 border-none text-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
                       >
                         {COUNTRY_CODES.map((country) => (
@@ -217,7 +217,7 @@ export default function LoginForm() {
                         type='tel'
                         placeholder='01012345678'
                         value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onChange={(e) => stateManager.setPhoneNumber(e.target.value)}
                         className='flex-1 border-0 border-l border-gray-600 bg-gray-900 text-white placeholder:text-gray-500 rounded-none focus:ring-0'
                       />
                     </div>
@@ -243,7 +243,7 @@ export default function LoginForm() {
                       type='email'
                       placeholder='your@email.com'
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => stateManager.setEmail(e.target.value)}
                       className='bg-gray-900 border-gray-600 text-white placeholder:text-gray-500'
                     />
                     <Button
@@ -266,7 +266,7 @@ export default function LoginForm() {
       {showDropdown && (
         <div
           className='fixed inset-0 z-40'
-          onClick={() => setShowDropdown(false)}
+          onClick={() => stateManager.setShowDropdown(false)}
         />
       )}
     </div>
