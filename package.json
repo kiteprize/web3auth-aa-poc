@@ -6,9 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "contract:deploy": "node scripts/deploy-viem.js",
+    "contract:poc": "node scripts/poc-simple.js"
   },
   "dependencies": {
+    "@account-abstraction/contracts": "^0.8.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@web3auth/base": "^9.7.0",
@@ -22,6 +27,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
+    "solc": "^0.8.30",
     "tailwind-merge": "^3.3.1",
     "viem": "^2.37.3"
   },
