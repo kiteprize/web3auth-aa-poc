@@ -2,13 +2,17 @@
   "name": "web3auth-ssr-poc",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "contract:deploy": "node scripts/deploy-viem.js",
-    "contract:poc": "node scripts/poc-simple.js"
+    "contract:deploy:hardhat": "npx hardhat run scripts/deploy-hardhat.js --network bscTestnet",
+    "contract:poc": "node scripts/poc-simple.js",
+    "check:nonce": "node scripts/check-nonce.js",
+    "clear:pending": "node scripts/clear-pending-tx.js"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.8.0",
@@ -20,6 +24,7 @@
     "@web3auth/modal": "^10.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.2",
     "input-otp": "^1.4.2",
     "jose": "^6.1.0",
     "lucide-react": "^0.542.0",
@@ -33,12 +38,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "hardhat": "^3.0.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

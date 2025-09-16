@@ -18,9 +18,6 @@ const myAccountFactoryArtifact = JSON.parse(
     "artifacts/contracts/MyAccountFactory.sol/MyAccountFactory.json"
   )
 );
-const myPaymasterArtifact = JSON.parse(
-  fs.readFileSync("artifacts/contracts/MyPaymaster.sol/MyPaymaster.json")
-);
 
 // Network configuration
 const NETWORKS = {
@@ -28,14 +25,16 @@ const NETWORKS = {
     chain: bscTestnet,
     rpcUrl:
       process.env.BSC_TESTNET_RPC_URL ||
-      "https://bsc-testnet-rpc.publicnode.com",
+      "https://bsc-testnet-dataseed.bnbchain.org",
     entryPointAddress: "0x4337084d9e255ff0702461cf8895ce9e3b5ff108", // ERC-4337 EntryPoint v0.8
+    gasPrice: parseGwei("15"), // BSC uses legacy gas model, higher price for priority
   },
   bscMainnet: {
     chain: bsc,
     rpcUrl:
       process.env.BSC_MAINNET_RPC_URL || "https://bsc-dataseed.binance.org",
     entryPointAddress: "0x4337084d9e255ff0702461cf8895ce9e3b5ff108", // ERC-4337 EntryPoint v0.8
+    gasPrice: parseGwei("5"), // BSC uses legacy gas model
   },
 };
 
@@ -54,7 +53,7 @@ const config = {
   ...networkConfig,
   privateKey:
     process.env.DEVELOPER_PRIVATE_KEY ||
-    "0xcf88cea92c94fb57f91e1ae45237afdff6583fad2ac67737a42a8f549ed613c8",
+    "0x178e9804a7636c9213693bb0e419dd7de325d881f889b1ec696e8fbaa30f1df3",
 };
 
 const account = privateKeyToAccount(config.privateKey);
@@ -75,29 +74,49 @@ let currentNonce;
 async function deployContract(name, bytecode, abi, args = []) {
   console.log(`\n📦 Deploying ${name}...`);
 
-  // Initialize nonce on first call
-  if (currentNonce === undefined) {
-    currentNonce = await publicClient.getTransactionCount({
-      address: account.address,
-      blockTag: "pending",
+  try {
+    // Initialize nonce on first call - always get fresh pending nonce
+    if (currentNonce === undefined) {
+      currentNonce = await publicClient.getTransactionCount({
+        address: account.address,
+        blockTag: "pending",
+      });
+      console.log(`   Fresh pending nonce fetched: ${currentNonce}`);
+    }
+
+    console.log(`   Using nonce: ${currentNonce}`);
+    console.log(`   Using gas price: ${config.gasPrice} wei`);
+
+    // Use legacy gas model for BSC
+    const hash = await walletClient.deployContract({
+      abi,
+      bytecode: bytecode.bytecode || bytecode,
+      args,
+      nonce: currentNonce,
+      gasPrice: config.gasPrice,
+      gas: 5000000, // Set explicit gas limit
     });
+
+    console.log(`   Transaction hash: ${hash}`);
+
+    currentNonce++; // Increment for next transaction
+
+    console.log(`   Waiting for transaction receipt...`);
+
+    // Wait for receipt with timeout
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash,
+      timeout: 60000, // 60 second timeout
+    });
+
+    console.log(`✅ ${name} deployed to:`, receipt.contractAddress);
+    console.log(`   Gas used: ${receipt.gasUsed}`);
+
+    return receipt.contractAddress;
+  } catch (error) {
+    console.error(`❌ Failed to deploy ${name}:`, error.message);
+    throw error;
   }
-
-  const hash = await walletClient.deployContract({
-    abi,
-    bytecode: bytecode.bytecode || bytecode,
-    args,
-    nonce: currentNonce,
-    maxFeePerGas: parseGwei("0.002"),
-    maxPriorityFeePerGas: parseGwei("0.001"),
-  });
-
-  currentNonce++; // Increment for next transaction
-
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
-  console.log(`✅ ${name} deployed to:`, receipt.contractAddress);
-
-  return receipt.contractAddress;
 }
 
 async function main() {
@@ -107,7 +126,7 @@ async function main() {
   console.log("🎯 EntryPoint address:", config.entryPointAddress);
 
   const balance = await publicClient.getBalance({ address: account.address });
-  console.log("💰 Account balance:", parseEther(balance.toString()));
+  console.log(`💰 Account balance: ${(Number(balance) / 1e18).toFixed(4)} BNB`);
 
   // Deploy TestToken
   const testTokenAddress = await deployContract(
@@ -124,15 +143,12 @@ async function main() {
     [config.entryPointAddress]
   );
 
-  // Skip MyPaymaster deployment for now
-  // const paymasterAddress = null;
-
   // Save deployment data
   const deploymentData = {
     network: currentNetwork,
     chainId: config.chain.id,
     contracts: {
-      TestToken: testTokenAddress,
+      TestToken: testTokenAddress, // Commented out for now
       MyAccountFactory: factoryAddress,
       EntryPoint: config.entryPointAddress,
     },

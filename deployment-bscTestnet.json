@@ -1,0 +1,11 @@
+{
+  "network": "bscTestnet",
+  "chainId": 97,
+  "contracts": {
+    "TestToken": "0x420049e251e5f0a350d7f11d127e1da446f3d447",
+    "MyAccountFactory": "0x46572ad2eea905860c8bc08816b8cb1e5c13c684",
+    "EntryPoint": "0x4337084d9e255ff0702461cf8895ce9e3b5ff108"
+  },
+  "deployer": "0xe3Fd4a6740DF87c40CB1bfa4Dc48B4372fBF866D",
+  "timestamp": "2025-09-16T05:17:21.267Z"
+}

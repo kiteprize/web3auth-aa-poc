@@ -11,22 +11,24 @@ export default {
   },
   networks: {
     bscTestnet: {
+      type: "http",
       url:
         process.env.BSC_TESTNET_RPC_URL ||
         "https://bsc-testnet-dataseed.bnbchain.org",
       accounts: [
         process.env.DEVELOPER_PRIVATE_KEY ||
-          "0xcf88cea92c94fb57f91e1ae45237afdff6583fad2ac67737a42a8f549ed613c8",
+          "0x178e9804a7636c9213693bb0e419dd7de325d881f889b1ec696e8fbaa30f1df3",
       ],
       chainId: 97,
       gasPrice: 10000000000, // 10 gwei
     },
     bscMainnet: {
+      type: "http",
       url:
         process.env.BSC_MAINNET_RPC_URL || "https://bsc-dataseed.binance.org",
       accounts: [
         process.env.DEVELOPER_PRIVATE_KEY ||
-          "0xcf88cea92c94fb57f91e1ae45237afdff6583fad2ac67737a42a8f549ed613c8",
+          "0x178e9804a7636c9213693bb0e419dd7de325d881f889b1ec696e8fbaa30f1df3",
       ],
       chainId: 56,
       gasPrice: 5000000000, // 5 gwei
