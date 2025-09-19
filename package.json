@@ -8,11 +8,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "contract:deploy": "node scripts/deploy-viem.js",
-    "contract:deploy:hardhat": "npx hardhat run scripts/deploy-hardhat.js --network bscTestnet",
-    "contract:poc": "node scripts/poc-simple.js",
-    "check:nonce": "node scripts/check-nonce.js",
-    "clear:pending": "node scripts/clear-pending-tx.js"
+    "contract:poc": "node scripts/poc-simple.js"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.8.0",
@@ -20,6 +16,8 @@
     "@openzeppelin/contracts-upgradeable": "^5.4.0",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@upstash/redis": "^1.35.3",
     "@web3auth/base": "^9.7.0",
     "@web3auth/modal": "^10.3.0",
     "class-variance-authority": "^0.7.1",

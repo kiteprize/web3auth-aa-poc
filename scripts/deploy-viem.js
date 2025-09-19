@@ -52,7 +52,7 @@ if (!networkConfig) {
 const config = {
   ...networkConfig,
   privateKey:
-    process.env.DEVELOPER_PRIVATE_KEY ||
+    process.env.BUNDLER_PRIVATE_KEY ||
     "0x178e9804a7636c9213693bb0e419dd7de325d881f889b1ec696e8fbaa30f1df3",
 };
 

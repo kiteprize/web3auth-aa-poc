@@ -6,8 +6,12 @@ const clientId =
 
 const web3AuthOptions: Web3AuthOptions = {
   clientId: process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID ?? clientId,
-  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET, // or WEB3AUTH_NETWORK.SAPPHIRE_DEVNET
-  defaultChainId: "0x38",
+  web3AuthNetwork:
+    process.env.NEXT_PUBLIC_DEFAULT_NETWORK === "mainnet"
+      ? WEB3AUTH_NETWORK.SAPPHIRE_MAINNET
+      : WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  defaultChainId:
+    process.env.NEXT_PUBLIC_DEFAULT_NETWORK === "mainnet" ? "0x38" : "0x61",
   storageType: "cookies",
 };
 

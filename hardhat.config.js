@@ -16,7 +16,7 @@ export default {
         process.env.BSC_TESTNET_RPC_URL ||
         "https://bsc-testnet-dataseed.bnbchain.org",
       accounts: [
-        process.env.DEVELOPER_PRIVATE_KEY ||
+        process.env.BUNDLER_PRIVATE_KEY ||
           "0x178e9804a7636c9213693bb0e419dd7de325d881f889b1ec696e8fbaa30f1df3",
       ],
       chainId: 97,
@@ -27,7 +27,7 @@ export default {
       url:
         process.env.BSC_MAINNET_RPC_URL || "https://bsc-dataseed.binance.org",
       accounts: [
-        process.env.DEVELOPER_PRIVATE_KEY ||
+        process.env.BUNDLER_PRIVATE_KEY ||
           "0x178e9804a7636c9213693bb0e419dd7de325d881f889b1ec696e8fbaa30f1df3",
       ],
       chainId: 56,
