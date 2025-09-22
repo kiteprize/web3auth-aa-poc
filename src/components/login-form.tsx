@@ -20,14 +20,14 @@ import {
 
 import { AuthServiceFactory, UserFormatter } from "@/lib/auth";
 import { LoginFormActions } from "@/components/forms/LoginFormActions";
-import { LoginFormStateManager } from "@/components/forms/LoginFormState";
+import { useLoginFormState } from "@/components/forms/LoginFormState";
 
 export default function LoginForm() {
   const { connectTo } = useWeb3AuthConnect();
   const { userInfo } = useWeb3AuthUser();
   const { disconnect } = useWeb3AuthDisconnect();
 
-  const stateManager = LoginFormStateManager.useLoginFormState();
+  const stateManager = useLoginFormState();
   const { showDropdown, selectedCountry, phoneNumber, email } = stateManager.getState();
 
   const authService = AuthServiceFactory.createAuthService(connectTo, disconnect, userInfo);

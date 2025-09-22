@@ -45,18 +45,19 @@ export class LoginFormStateManager {
     });
   }
 
-  static useLoginFormState() {
-    const [state, setState] = useState<LoginFormState>({
-      showDropdown: false,
-      selectedCountry: DEFAULT_COUNTRY.code,
-      phoneNumber: "",
-      email: "",
-    });
-
-    return new LoginFormStateManager(state, setState);
-  }
-
   getState(): LoginFormState {
     return this.state;
   }
 }
+
+export function useLoginFormState(): LoginFormStateManager {
+  const [state, setState] = useState<LoginFormState>({
+    showDropdown: false,
+    selectedCountry: DEFAULT_COUNTRY.code,
+    phoneNumber: "",
+    email: "",
+  });
+
+  return new LoginFormStateManager(state, setState);
+}
+
