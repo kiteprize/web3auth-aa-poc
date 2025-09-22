@@ -1,5 +1,20 @@
+import hardhatVerify from "@nomicfoundation/hardhat-verify";
+import { verify } from "crypto";
+
 /** @type import('hardhat/config').HardhatUserConfig */
 export default {
+  plugins: [hardhatVerify],
+  verify: {
+    etherscan: {
+      apiKey: process.env.ETHERSCAN_API_KEY,
+    },
+    blockscout: {
+      enable: false,
+    },
+    bscTrace: {
+      enable: true,
+    },
+  },
   solidity: {
     version: "0.8.28",
     settings: {
