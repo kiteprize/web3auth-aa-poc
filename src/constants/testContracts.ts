@@ -1,4 +1,6 @@
-// 테스트용 컨트랙트 주소들 (환경별 분리)
+// 테스트용 컨트랙트 주소들 (환경변수 기반)
+
+import { getAppConfig, getContractAddresses, isTestnet } from '@/config/environment';
 
 export interface TestContract {
   address: string;
@@ -13,107 +15,74 @@ export interface TestTokenContract extends TestContract {
   totalSupply: string;
 }
 
-// BSC Testnet 테스트 컨트랙트들
-export const BSC_TESTNET_CONTRACTS = {
-  // 테스트용 ERC-20 토큰들
-  testTokens: [
-    {
-      address: '0x78867bbeef46f6a6ac44c6ac3cc05844b2f9d36b' as const,
-      name: 'Test USDT',
-      symbol: 'tUSDT',
-      decimals: 18,
-      totalSupply: '1000000000000000000000000', // 1M tokens
-      abi: [
-        'function name() external view returns (string)',
-        'function symbol() external view returns (string)', 
-        'function decimals() external view returns (uint8)',
-        'function totalSupply() external view returns (uint256)',
-        'function balanceOf(address owner) external view returns (uint256)',
-        'function transfer(address to, uint256 amount) external returns (bool)',
-        'function approve(address spender, uint256 amount) external returns (bool)',
-        'function allowance(address owner, address spender) external view returns (uint256)',
-      ],
-      description: '테스트용 USDT 토큰 - 가스리스 전송 테스트에 사용'
-    },
-    {
-      address: '0x01c96a00F93F3c3B08f42B1F0C8A3Dfed6Be7AEB' as const,
-      name: 'Test DAI',
-      symbol: 'tDAI', 
-      decimals: 18,
-      totalSupply: '1000000000000000000000000',
-      abi: [
-        'function name() external view returns (string)',
-        'function symbol() external view returns (string)',
-        'function decimals() external view returns (uint8)',
-        'function totalSupply() external view returns (uint256)',
-        'function balanceOf(address owner) external view returns (uint256)',
-        'function transfer(address to, uint256 amount) external returns (bool)',
-        'function approve(address spender, uint256 amount) external returns (bool)',
-        'function allowance(address owner, address spender) external view returns (uint256)',
-      ],
-      description: '테스트용 DAI 토큰 - 다양한 토큰 전송 테스트'
-    }
-  ] as TestTokenContract[],
+// 공용 ERC-20 토큰 ABI
+const ERC20_ABI = [
+  'function name() external view returns (string)',
+  'function symbol() external view returns (string)',
+  'function decimals() external view returns (uint8)',
+  'function totalSupply() external view returns (uint256)',
+  'function balanceOf(address owner) external view returns (uint256)',
+  'function transfer(address to, uint256 amount) external returns (bool)',
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+];
 
-  // 테스트용 상호작용 컨트랙트들
-  testContracts: [
-    {
-      address: '0x' as const, // 실제 배포 후 업데이트
-      name: 'Counter Contract',
-      abi: [
-        'function count() external view returns (uint256)',
-        'function increment() external',
-        'function decrement() external',
-        'function reset() external',
-        'event CountChanged(uint256 newCount)'
-      ],
-      description: '간단한 카운터 컨트랙트 - 가스리스 상태 변경 테스트'
-    },
-    {
-      address: '0x' as const, // 실제 배포 후 업데이트
-      name: 'Multi-call Test Contract',
-      abi: [
-        'function doSomething(uint256 value) external',
-        'function doMultiple(uint256[] calldata values) external', 
-        'function getData() external view returns (uint256)',
-        'event ActionPerformed(address indexed user, uint256 value)'
-      ],
-      description: '다중 호출 테스트 컨트랙트 - 배치 트랜잭션 테스트'
-    }
-  ] as TestContract[]
-} as const;
-
-// BSC Mainnet (실제 배포 시에만 사용)
-export const BSC_MAINNET_CONTRACTS = {
-  // 실제 메인넷 토큰들 (테스트 목적으로 소량만)
-  testTokens: [
-    {
-      address: '0x55d398326f99059ff775485246999027b3197955' as const,
-      name: 'Tether USD',
-      symbol: 'USDT',
-      decimals: 18,
-      totalSupply: '0', // 실제 토큰이므로 공급량 조회 필요
-      abi: [
-        'function name() external view returns (string)',
-        'function symbol() external view returns (string)',
-        'function decimals() external view returns (uint8)',
-        'function totalSupply() external view returns (uint256)',
-        'function balanceOf(address owner) external view returns (uint256)',
-        'function transfer(address to, uint256 amount) external returns (bool)',
-      ],
-      description: '실제 USDT 토큰 (소량 테스트만 권장)'
-    }
-  ] as TestTokenContract[],
-
-  testContracts: [] as TestContract[]
-} as const;
-
-// 현재 네트워크에 따른 컨트랙트 반환
+/**
+ * 현재 네트워크에 따른 테스트 컨트랙트 반환
+ */
 export function getCurrentTestContracts() {
-  const isMainnet = process.env.NEXT_PUBLIC_NETWORK_MODE === 'mainnet' || 
-                   process.env.NODE_ENV === 'production';
-  
-  return isMainnet ? BSC_MAINNET_CONTRACTS : BSC_TESTNET_CONTRACTS;
+  const config = getAppConfig();
+  const contractAddresses = getContractAddresses();
+
+  if (config.isTestnet) {
+    return {
+      // 테스트넷용 토큰들
+      testTokens: [
+        {
+          address: contractAddresses.testTokenAddress || '0x420049e251e5f0a350d7f11d127e1da446f3d447',
+          name: 'Test Token',
+          symbol: 'TEST',
+          decimals: 18,
+          totalSupply: '1000000000000000000000000', // 1M tokens
+          abi: ERC20_ABI,
+          description: '테스트용 토큰 - 가스리스 전송 테스트에 사용'
+        }
+      ] as TestTokenContract[],
+
+      // 테스트용 상호작용 컨트랙트들
+      testContracts: [
+        {
+          address: '0x', // 필요시 환경변수로 추가 가능
+          name: 'Counter Contract',
+          abi: [
+            'function count() external view returns (uint256)',
+            'function increment() external',
+            'function decrement() external',
+            'function reset() external',
+            'event CountChanged(uint256 newCount)'
+          ],
+          description: '간단한 카운터 컨트랙트 - 가스리스 상태 변경 테스트'
+        }
+      ] as TestContract[]
+    };
+  } else {
+    // 메인넷용
+    return {
+      testTokens: [
+        {
+          address: '0x55d398326f99059ff775485246999027b3197955',
+          name: 'Tether USD',
+          symbol: 'USDT',
+          decimals: 18,
+          totalSupply: '0', // 실제 토큰이므로 공급량 조회 필요
+          abi: ERC20_ABI,
+          description: '실제 USDT 토큰 (소량 테스트만 권장)'
+        }
+      ] as TestTokenContract[],
+
+      testContracts: [] as TestContract[]
+    };
+  }
 }
 
 // 특정 토큰 주소로 토큰 정보 찾기

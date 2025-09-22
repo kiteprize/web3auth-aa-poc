@@ -5,7 +5,6 @@ import {
   createPublicClient,
   http
 } from 'viem';
-import { bscTestnet } from 'viem/chains';
 
 import {
   type UserOperation,
@@ -29,6 +28,7 @@ import { UserOperationSigner } from './signer';
 import { SmartAccountManager } from './smartAccount';
 import { TransactionExecutor } from './transaction';
 import { ValidationService } from './validator';
+import { getNetworkConfig, getContractAddresses } from '@/config/environment';
 
 /**
  * AA 시스템의 메인 오케스트레이터
@@ -44,38 +44,48 @@ export class AASystemOrchestrator implements IAASystemOrchestrator {
   private publicClient: PublicClient;
   private config: NetworkConfig;
 
-  constructor(config: NetworkConfig) {
-    this.config = config;
+  constructor(config?: NetworkConfig) {
+    // 환경 설정 사용
+    const networkConfig = getNetworkConfig();
+    const contractAddresses = getContractAddresses();
 
-    // PublicClient 생성
+    // config가 전달된 경우 우선 사용, 없으면 환경 설정 사용
+    this.config = config || {
+      chainId: networkConfig.chainId,
+      rpcUrl: networkConfig.rpcUrl,
+      entryPointAddress: contractAddresses.entryPointAddress,
+      factoryAddress: contractAddresses.factoryAddress
+    };
+
+    // PublicClient 생성 (환경 설정의 체인 사용)
     this.publicClient = createPublicClient({
-      chain: bscTestnet, // TODO: config에서 동적으로 설정
-      transport: http(config.rpcUrl)
+      chain: networkConfig.chain,
+      transport: http(this.config.rpcUrl)
     });
 
     // 의존성 주입으로 서비스들 초기화
     this.userOpBuilder = new UserOperationCreator(
       this.publicClient,
-      config.factoryAddress,
-      config.entryPointAddress
+      this.config.factoryAddress,
+      this.config.entryPointAddress
     );
 
     this.signatureService = new UserOperationSigner(
       this.publicClient,
-      config.entryPointAddress
+      this.config.entryPointAddress
     );
 
     this.smartAccountService = new SmartAccountManager(
       this.publicClient,
-      config.factoryAddress,
-      config.entryPointAddress
+      this.config.factoryAddress,
+      this.config.entryPointAddress
     );
 
     this.transactionService = new TransactionExecutor();
 
     this.validationService = new ValidationService(
       this.publicClient,
-      config.entryPointAddress
+      this.config.entryPointAddress
     );
   }
 

@@ -7,18 +7,18 @@ import {
   http,
   getContract,
 } from "viem";
-import { bscTestnet } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { UserOpQueue, type QueuedUserOp, type UserOpResult } from "@/lib/redis/queue";
+import { getAppConfig, getNetworkConfig, getContractAddresses } from "@/config/environment";
 
 // Runtime 설정
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-// 환경변수 설정
-const RPC_URL = process.env.BSC_TESTNET_RPC_URL || "https://bsc-testnet-rpc.publicnode.com";
-const ENTRY_POINT = "0x4337084d9e255ff0702461cf8895ce9e3b5ff108" as `0x${string}`;
-const BUNDLER_PRIVATE_KEY = process.env.BUNDLER_PRIVATE_KEY as `0x${string}`;
+// 환경 설정 가져오기
+const appConfig = getAppConfig();
+const networkConfig = getNetworkConfig();
+const contractAddresses = getContractAddresses();
 
 // EntryPoint ABI (필요한 함수만)
 const ENTRY_POINT_ABI = [
@@ -50,19 +50,19 @@ const ENTRY_POINT_ABI = [
 
 // viem clients 설정
 const publicClient = createPublicClient({
-  chain: bscTestnet,
-  transport: http(RPC_URL),
+  chain: networkConfig.chain,
+  transport: http(networkConfig.rpcUrl),
 });
 
 let walletClient: any = null;
 let bundlerAccount: any = null;
 
 // 번들러 계정 초기화
-if (BUNDLER_PRIVATE_KEY) {
-  bundlerAccount = privateKeyToAccount(BUNDLER_PRIVATE_KEY);
+if (appConfig.privateKey) {
+  bundlerAccount = privateKeyToAccount(appConfig.privateKey);
   walletClient = createWalletClient({
-    chain: bscTestnet,
-    transport: http(RPC_URL),
+    chain: networkConfig.chain,
+    transport: http(networkConfig.rpcUrl),
     account: bundlerAccount,
   });
 }
@@ -92,7 +92,7 @@ async function processBatch(batch: QueuedUserOp[]): Promise<UserOpResult[]> {
 
     // EntryPoint 컨트랙트로 handleOps 호출
     const txHash = await walletClient.writeContract({
-      address: ENTRY_POINT,
+      address: contractAddresses.entryPointAddress,
       abi: ENTRY_POINT_ABI,
       functionName: 'handleOps',
       args: [userOps, bundlerAccount.address]
@@ -157,7 +157,7 @@ async function processBatch(batch: QueuedUserOp[]): Promise<UserOpResult[]> {
 // POST: 배치 처리 실행
 export async function POST(req: NextRequest) {
   try {
-    if (!BUNDLER_PRIVATE_KEY) {
+    if (!appConfig.privateKey) {
       return NextResponse.json(
         { error: "BUNDLER_NOT_CONFIGURED", message: "Bundler private key not configured" },
         { status: 500 }
@@ -218,7 +218,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       ...queueStatus,
-      bundlerConfigured: Boolean(BUNDLER_PRIVATE_KEY),
+      bundlerConfigured: Boolean(appConfig.privateKey),
       bundlerAddress: bundlerAccount?.address || null
     });
 

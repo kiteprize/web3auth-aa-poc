@@ -1,12 +1,33 @@
 // Upstash Redis 클라이언트 설정
 
 import { Redis } from '@upstash/redis';
+import { getAppConfig } from '@/config/environment';
 
-// Redis 클라이언트 인스턴스
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || 'https://mock-redis-url.upstash.io',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || 'mock-token',
-});
+// 환경 설정에서 Redis 정보 가져오기
+let redis: Redis | null = null;
+
+function createRedisClient(): Redis | null {
+  try {
+    const config = getAppConfig();
+    if (config.redis) {
+      return new Redis({
+        url: config.redis.url,
+        token: config.redis.token,
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to get Redis configuration:', error);
+  }
+  return null;
+}
+
+// Redis 클라이언트 인스턴스 (lazy initialization)
+function getRedis(): Redis | null {
+  if (!redis) {
+    redis = createRedisClient();
+  }
+  return redis;
+}
 
 // 개발 환경에서 Redis가 없는 경우를 위한 Mock 클라이언트
 class MockRedis {
@@ -75,26 +96,44 @@ class MockRedis {
 }
 
 // Redis 연결 확인 및 Mock 클라이언트 사용 여부 결정
-let redisClient: Redis | MockRedis = redis;
+let redisClient: Redis | MockRedis | null = null;
 let usingMockRedis = false;
 
 async function initializeRedis() {
-  try {
-    // Redis 연결 테스트
-    await redis.ping();
-    console.log('✅ Connected to Upstash Redis');
-    redisClient = redis;
-    usingMockRedis = false;
-  } catch (error) {
-    console.warn('⚠️  Cannot connect to Redis, using mock client for development');
-    console.warn('Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN');
+  const realRedis = getRedis();
+
+  if (realRedis) {
+    try {
+      // Redis 연결 테스트
+      await realRedis.ping();
+      console.log('✅ Connected to Upstash Redis');
+      redisClient = realRedis;
+      usingMockRedis = false;
+    } catch (error) {
+      console.warn('⚠️  Cannot connect to Redis, using mock client for development');
+      console.warn('Redis connection error:', error);
+      redisClient = new MockRedis();
+      usingMockRedis = true;
+    }
+  } else {
+    console.warn('⚠️  Redis not configured, using mock client for development');
+    console.warn('Please configure Redis settings in environment variables');
     redisClient = new MockRedis();
     usingMockRedis = true;
   }
 }
 
-// 초기화 실행 (모듈 로드시)
-initializeRedis().catch(console.error);
+// 초기화된 Redis 클라이언트 가져오기
+async function getRedisClient(): Promise<Redis | MockRedis> {
+  if (!redisClient) {
+    await initializeRedis();
+  }
+  return redisClient!;
+}
 
-export { redisClient, usingMockRedis };
-export default redisClient;
+export { getRedisClient, usingMockRedis };
+
+// 레거시 호환성을 위한 기본 export
+export default {
+  async get() { return (await getRedisClient()); }
+};

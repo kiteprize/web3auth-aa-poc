@@ -2,24 +2,22 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createPublicClient, getContract, http } from "viem";
-import { bscTestnet } from "viem/chains";
 import { UserOpQueue, type QueuedUserOp } from "@/lib/redis/queue";
 import { TransactionExecutor } from "@/lib/userOperation";
+import { getNetworkConfig, getContractAddresses } from "@/config/environment";
 
 // Runtime 설정
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-// 환경변수 설정
-const RPC_URL =
-  process.env.BSC_TESTNET_RPC_URL || "https://bsc-testnet-rpc.publicnode.com";
-const ENTRY_POINT =
-  "0x4337084d9e255ff0702461cf8895ce9e3b5ff108" as `0x${string}`;
+// 환경 설정 가져오기
+const networkConfig = getNetworkConfig();
+const contractAddresses = getContractAddresses();
 
 // viem client 설정
 const publicClient = createPublicClient({
-  chain: bscTestnet,
-  transport: http(RPC_URL),
+  chain: networkConfig.chain,
+  transport: http(networkConfig.rpcUrl),
 });
 
 // EntryPoint ABI (필요한 함수만)
@@ -118,9 +116,7 @@ function validateUserOpShape(op: any): void {
 }
 
 export async function POST(req: NextRequest) {
-  const transactionExecutor = new TransactionExecutor(
-    "http://localhost:3000/api/userop"
-  );
+  const transactionExecutor = new TransactionExecutor();
   try {
     // 요청 파싱 및 역직렬화
     const {
@@ -152,7 +148,7 @@ export async function POST(req: NextRequest) {
     if (!skipValidation) {
       try {
         await publicClient.simulateContract({
-          address: ENTRY_POINT,
+          address: contractAddresses.entryPointAddress,
           abi: ENTRY_POINT_ABI,
           functionName: "simulateValidation",
           args: [userOp],
@@ -180,7 +176,7 @@ export async function POST(req: NextRequest) {
 
     // UserOpHash 계산
     const entryPointRead = getContract({
-      address: ENTRY_POINT,
+      address: contractAddresses.entryPointAddress,
       abi: ENTRY_POINT_ABI,
       client: publicClient,
     });
