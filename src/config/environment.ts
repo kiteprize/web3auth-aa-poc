@@ -27,8 +27,8 @@ export interface AppConfig {
   rpcUrl: string;
   explorerUrl: string;
 
-  // 인증 정보
-  privateKey: `0x${string}`;
+  // 인증 정보 (서버에서만 사용)
+  privateKey?: `0x${string}`;
 
   // 컨트랙트 주소들
   entryPointAddress: `0x${string}`;

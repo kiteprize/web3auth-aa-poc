@@ -5,7 +5,7 @@ export interface EnvironmentVariables {
   NETWORK_MODE: "testnet" | "mainnet";
   CHAIN_ID: number;
   RPC_URL: string;
-  PRIVATE_KEY: `0x${string}`;
+  PRIVATE_KEY?: `0x${string}`;
   ENTRY_POINT_ADDRESS: `0x${string}`;
   FACTORY_ADDRESS: `0x${string}`;
   TEST_TOKEN_ADDRESS?: `0x${string}`;
@@ -25,39 +25,40 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     );
   }
 
-  const networkMode = process.env.NETWORK_MODE;
+  const networkMode = process.env.NEXT_PUBLIC_NETWORK_MODE || process.env.NETWORK_MODE;
   if (!networkMode || !["testnet", "mainnet"].includes(networkMode)) {
-    throw new Error("NETWORK_MODE must be one of: testnet, mainnet");
+    throw new Error("NEXT_PUBLIC_NETWORK_MODE must be one of: testnet, mainnet");
   }
 
-  const chainId = process.env.CHAIN_ID;
+  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID || process.env.CHAIN_ID;
   if (!chainId || isNaN(Number(chainId))) {
-    throw new Error("CHAIN_ID must be a valid number");
+    throw new Error("NEXT_PUBLIC_CHAIN_ID must be a valid number");
   }
 
-  const rpcUrl = process.env.RPC_URL;
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL;
   if (!rpcUrl || !isValidUrl(rpcUrl)) {
-    throw new Error("RPC_URL must be a valid URL");
+    throw new Error("NEXT_PUBLIC_RPC_URL must be a valid URL");
   }
 
+  // PRIVATE_KEY is server-only, skip validation on client side
   const privateKey = process.env.PRIVATE_KEY;
-  if (!privateKey || !isValidPrivateKey(privateKey)) {
+  if (typeof window === 'undefined' && (!privateKey || !isValidPrivateKey(privateKey))) {
     throw new Error(
       "PRIVATE_KEY must be a valid hex private key starting with 0x"
     );
   }
 
-  const entryPointAddress = process.env.ENTRY_POINT_ADDRESS;
+  const entryPointAddress = process.env.NEXT_PUBLIC_ENTRY_POINT_ADDRESS || process.env.ENTRY_POINT_ADDRESS;
   if (!entryPointAddress || !isValidAddress(entryPointAddress)) {
-    throw new Error("ENTRY_POINT_ADDRESS must be a valid Ethereum address");
+    throw new Error("NEXT_PUBLIC_ENTRY_POINT_ADDRESS must be a valid Ethereum address");
   }
 
-  const factoryAddress = process.env.FACTORY_ADDRESS;
+  const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_ADDRESS || process.env.FACTORY_ADDRESS;
   if (!factoryAddress || !isValidAddress(factoryAddress)) {
-    throw new Error("FACTORY_ADDRESS must be a valid Ethereum address");
+    throw new Error("NEXT_PUBLIC_FACTORY_ADDRESS must be a valid Ethereum address");
   }
 
-  const testTokenAddress = process.env.TEST_TOKEN_ADDRESS;
+  const testTokenAddress = process.env.NEXT_PUBLIC_TEST_TOKEN_ADDRESS || process.env.TEST_TOKEN_ADDRESS;
   if (testTokenAddress && !isValidAddress(testTokenAddress)) {
     throw new Error("TEST_TOKEN_ADDRESS must be a valid Ethereum address");
   }
@@ -67,7 +68,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     NETWORK_MODE: networkMode as "testnet" | "mainnet",
     CHAIN_ID: Number(chainId),
     RPC_URL: rpcUrl,
-    PRIVATE_KEY: privateKey as `0x${string}`,
+    PRIVATE_KEY: privateKey as `0x${string}` | undefined,
     ENTRY_POINT_ADDRESS: entryPointAddress as `0x${string}`,
     FACTORY_ADDRESS: factoryAddress as `0x${string}`,
     TEST_TOKEN_ADDRESS: testTokenAddress as `0x${string}` | undefined,
