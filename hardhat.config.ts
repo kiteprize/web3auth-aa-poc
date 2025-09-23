@@ -1,5 +1,4 @@
 import hardhatVerify from "@nomicfoundation/hardhat-verify";
-import { verify } from "crypto";
 
 /** @type import('hardhat/config').HardhatUserConfig */
 export default {

@@ -134,6 +134,8 @@ async function getRedisClient(): Promise<Redis | MockRedis> {
 export { getRedisClient, usingMockRedis };
 
 // 레거시 호환성을 위한 기본 export
-export default {
+const redisClientLegacy = {
   async get() { return (await getRedisClient()); }
 };
+
+export default redisClientLegacy;

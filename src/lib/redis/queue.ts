@@ -1,6 +1,6 @@
 // Redis 기반 UserOperation 큐 시스템
 
-import redisClient from "./client";
+import { getRedisClient } from "./client";
 
 // 큐 키 상수
 const QUEUE_KEYS = {
@@ -74,7 +74,8 @@ export class UserOpQueue {
    * UserOp을 대기 큐에 추가
    */
   static async enqueue(queuedUserOp: QueuedUserOp): Promise<void> {
-    await redisClient.lpush(
+    const redis = await getRedisClient();
+    await redis.lpush(
       QUEUE_KEYS.PENDING,
       JSON.stringify(queuedUserOp, this.bigIntReplacer)
     );
@@ -88,7 +89,8 @@ export class UserOpQueue {
     const items: QueuedUserOp[] = [];
 
     for (let i = 0; i < maxSize; i++) {
-      const item = await redisClient.rpop(QUEUE_KEYS.PENDING);
+      const redis = await getRedisClient();
+      const item = await redis.rpop(QUEUE_KEYS.PENDING);
       if (!item) break;
 
       try {
@@ -105,7 +107,8 @@ export class UserOpQueue {
         timestamp: Date.now(),
       };
 
-      await redisClient.set(
+      const redis2 = await getRedisClient();
+      await redis2.set(
         `${QUEUE_KEYS.PROCESSING}:${Date.now()}`,
         JSON.stringify(processingData, this.bigIntReplacer),
         { ex: 300 } // 5분 후 만료
@@ -119,7 +122,8 @@ export class UserOpQueue {
    * 큐 크기 조회
    */
   static async getQueueSize(): Promise<number> {
-    return await redisClient.llen(QUEUE_KEYS.PENDING);
+    const redis = await getRedisClient();
+    return await redis.llen(QUEUE_KEYS.PENDING);
   }
 
   /**
@@ -127,7 +131,8 @@ export class UserOpQueue {
    */
   static async saveResult(result: UserOpResult): Promise<void> {
     const key = `${QUEUE_KEYS.RESULTS}${result.requestId}`;
-    await redisClient.set(
+    const redis = await getRedisClient();
+    await redis.set(
       key,
       JSON.stringify(result, this.bigIntReplacer),
       { ex: 300 } // 5분 후 자동 삭제
@@ -140,7 +145,8 @@ export class UserOpQueue {
    */
   static async getResult(requestId: string): Promise<UserOpResult | null> {
     const key = `${QUEUE_KEYS.RESULTS}${requestId}`;
-    const result = await redisClient.get(key);
+    const redis = await getRedisClient();
+    const result = await redis.get(key);
 
     if (!result) return null;
 
@@ -157,7 +163,8 @@ export class UserOpQueue {
    */
   static async deleteResult(requestId: string): Promise<void> {
     const key = `${QUEUE_KEYS.RESULTS}${requestId}`;
-    await redisClient.del(key);
+    const redis = await getRedisClient();
+    await redis.del(key);
   }
 
   /**
@@ -168,7 +175,8 @@ export class UserOpQueue {
     const oneDayMs = 24 * 60 * 60 * 1000;
     const key = `${QUEUE_KEYS.RATE_LIMIT}${sender.toLowerCase()}`;
 
-    const data = await redisClient.get(key);
+    const redis = await getRedisClient();
+    const data = await redis.get(key);
     let limit: { count: number; resetTime: number };
 
     if (!data || typeof data !== "string") {
@@ -191,7 +199,8 @@ export class UserOpQueue {
 
     // Redis에 저장 (TTL 설정)
     const ttlSeconds = Math.ceil((limit.resetTime - now) / 1000);
-    await redisClient.set(key, JSON.stringify(limit), { ex: ttlSeconds });
+    const redis2 = await getRedisClient();
+    await redis2.set(key, JSON.stringify(limit), { ex: ttlSeconds });
 
     const remaining = Math.max(0, 10 - limit.count);
     const allowed = limit.count <= 10;
@@ -210,7 +219,8 @@ export class UserOpQueue {
    * 큐 상태 조회 (모니터링용)
    */
   static async getQueueStatus() {
-    const pendingCount = await redisClient.llen(QUEUE_KEYS.PENDING);
+    const redis = await getRedisClient();
+    const pendingCount = await redis.llen(QUEUE_KEYS.PENDING);
 
     return {
       pending: pendingCount,
@@ -247,7 +257,8 @@ export class UserOpQueue {
   static async clearAll(): Promise<void> {
     console.warn("⚠️  Clearing all queue data...");
 
-    await redisClient.del(QUEUE_KEYS.PENDING);
+    const redis = await getRedisClient();
+    await redis.del(QUEUE_KEYS.PENDING);
 
     // 모든 결과와 레이트 리미트 데이터도 클리어 (프로덕션에서는 주의)
     // 실제로는 패턴 매칭으로 삭제해야 하지만, 개발용으로는 이렇게 처리
