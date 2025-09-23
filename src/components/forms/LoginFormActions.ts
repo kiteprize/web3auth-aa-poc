@@ -8,17 +8,29 @@ export class LoginFormActions {
   ) {}
 
   async handleSmsLogin(countryData: any, phoneNumber: string): Promise<void> {
+    console.log(`🔍 SMS 로그인 시도: 국가=${countryData.code}, 입력번호=${phoneNumber}`);
+
     if (!this.phoneService.validate(countryData.code, phoneNumber)) {
+      console.error(`❌ 전화번호 검증 실패: ${phoneNumber}`);
       throw new Error("Invalid phone number");
     }
 
     const formattedNumber = this.phoneService.formatForWeb3Auth(countryData, phoneNumber);
-    await this.authService.connectTo("auth", {
-      authConnection: "sms_passwordless",
-      loginHint: formattedNumber,
-    });
-    
-    this.onSuccess?.();
+
+    console.log(`🚀 Web3Auth SMS 로그인 호출: loginHint=${formattedNumber}`);
+
+    try {
+      await this.authService.connectTo("auth", {
+        authConnection: "sms_passwordless",
+        loginHint: formattedNumber,
+      });
+
+      console.log(`✅ SMS 로그인 성공`);
+      this.onSuccess?.();
+    } catch (error) {
+      console.error(`❌ SMS 로그인 실패:`, error);
+      throw error;
+    }
   }
 
   async handleEmailLogin(email: string): Promise<void> {

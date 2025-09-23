@@ -215,7 +215,7 @@ export default function LoginForm() {
                       <Input
                         id='phone'
                         type='tel'
-                        placeholder='01012345678'
+                        placeholder={selectedCountry === 'KR' ? '01012345678' : '전화번호'}
                         value={phoneNumber}
                         onChange={(e) => stateManager.setPhoneNumber(e.target.value)}
                         className='flex-1 border-0 border-l border-gray-600 bg-gray-900 text-white placeholder:text-gray-500 rounded-none focus:ring-0'
@@ -230,6 +230,28 @@ export default function LoginForm() {
                       <Phone className='w-4 h-4' />
                     </Button>
                   </div>
+                  {/* 전화번호 형식 미리보기 */}
+                  {phoneNumber && (
+                    <div className='text-xs text-gray-400 mt-1'>
+                      전송 형식: {(() => {
+                        try {
+                          const countryData = COUNTRY_CODES.find(c => c.code === selectedCountry);
+                          if (countryData) {
+                            return phoneService.formatForWeb3Auth(countryData, phoneNumber);
+                          }
+                          return phoneNumber;
+                        } catch {
+                          return phoneNumber;
+                        }
+                      })()}
+                    </div>
+                  )}
+                  {/* 한국 번호 입력 가이드 */}
+                  {selectedCountry === 'KR' && (
+                    <div className='text-xs text-gray-500'>
+                      💡 한국 번호: 010으로 시작하는 번호를 입력하세요 (예: 01012345678)
+                    </div>
+                  )}
                 </div>
 
                 {/* Email Login */}

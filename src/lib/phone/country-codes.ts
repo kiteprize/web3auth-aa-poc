@@ -1,4 +1,9 @@
-import { CountryCode } from './types'
+export interface CountryCode {
+  code: string
+  dialCode: string
+  name: string
+  flag: string
+}
 
 export const COUNTRY_CODES: CountryCode[] = [
   { code: 'KR', dialCode: '+82', name: '대한민국', flag: '🇰🇷' },
