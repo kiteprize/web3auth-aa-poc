@@ -5,6 +5,7 @@ export interface EnvironmentVariables {
   NETWORK_MODE: "testnet" | "mainnet";
   CHAIN_ID: number;
   RPC_URL: string;
+  BASE_URL: string;
   PRIVATE_KEY?: `0x${string}`;
   ENTRY_POINT_ADDRESS: `0x${string}`;
   FACTORY_ADDRESS: `0x${string}`;
@@ -40,6 +41,11 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     throw new Error("NEXT_PUBLIC_RPC_URL must be a valid URL");
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL;
+  if (!baseUrl || !isValidUrl(baseUrl)) {
+    throw new Error("NEXT_PUBLIC_BASE_URL must be a valid URL");
+  }
+
   // PRIVATE_KEY is server-only, skip validation on client side
   const privateKey = process.env.PRIVATE_KEY;
   if (typeof window === 'undefined' && (!privateKey || !isValidPrivateKey(privateKey))) {
@@ -68,6 +74,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     NETWORK_MODE: networkMode as "testnet" | "mainnet",
     CHAIN_ID: Number(chainId),
     RPC_URL: rpcUrl,
+    BASE_URL: baseUrl,
     PRIVATE_KEY: privateKey as `0x${string}` | undefined,
     ENTRY_POINT_ADDRESS: entryPointAddress as `0x${string}`,
     FACTORY_ADDRESS: factoryAddress as `0x${string}`,

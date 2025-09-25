@@ -26,6 +26,7 @@ export interface AppConfig {
   chainId: number;
   rpcUrl: string;
   explorerUrl: string;
+  baseUrl: string;
 
   // 인증 정보 (서버에서만 사용)
   privateKey?: `0x${string}`;
@@ -80,6 +81,7 @@ function createAppConfig(env: EnvironmentVariables): AppConfig {
     chainId: env.CHAIN_ID,
     rpcUrl: env.RPC_URL,
     explorerUrl: chainDefaults.explorerUrl,
+    baseUrl: env.BASE_URL,
 
     // 인증 정보
     privateKey: env.PRIVATE_KEY,
@@ -187,4 +189,12 @@ export function isProduction(): boolean {
  */
 export function isTestnet(): boolean {
   return getAppConfig().isTestnet;
+}
+
+/**
+ * API Base URL 반환 (BASE_URL + /api/userop)
+ */
+export function getApiBaseUrl(): string {
+  const config = getAppConfig();
+  return `${config.baseUrl}/api/userop`;
 }

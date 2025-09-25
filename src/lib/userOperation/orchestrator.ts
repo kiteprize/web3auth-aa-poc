@@ -28,7 +28,7 @@ import { UserOperationSigner } from './signer';
 import { SmartAccountManager } from './smartAccount';
 import { TransactionExecutor } from './transaction';
 import { ValidationService } from './validator';
-import { getNetworkConfig, getContractAddresses } from '@/config/environment';
+import { getNetworkConfig, getContractAddresses, getApiBaseUrl } from '@/config/environment';
 
 /**
  * AA 시스템의 메인 오케스트레이터
@@ -81,7 +81,7 @@ export class AASystemOrchestrator implements IAASystemOrchestrator {
       this.config.entryPointAddress
     );
 
-    this.transactionService = new TransactionExecutor();
+    this.transactionService = new TransactionExecutor(getApiBaseUrl());
 
     this.validationService = new ValidationService(
       this.publicClient,
