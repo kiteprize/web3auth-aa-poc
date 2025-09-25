@@ -1,11 +1,12 @@
 // 테스트용 컨트랙트 주소들 (환경변수 기반)
 
 import { getAppConfig, getContractAddresses, isTestnet } from '@/config/environment';
+import { ERC20_ABI } from '@/lib/aa/abi/ERC20';
 
 export interface TestContract {
   address: string;
   name: string;
-  abi: any[];
+  abi: readonly any[];
   description: string;
 }
 
@@ -15,17 +16,7 @@ export interface TestTokenContract extends TestContract {
   totalSupply: string;
 }
 
-// 공용 ERC-20 토큰 ABI
-const ERC20_ABI = [
-  'function name() external view returns (string)',
-  'function symbol() external view returns (string)',
-  'function decimals() external view returns (uint8)',
-  'function totalSupply() external view returns (uint256)',
-  'function balanceOf(address owner) external view returns (uint256)',
-  'function transfer(address to, uint256 amount) external returns (bool)',
-  'function approve(address spender, uint256 amount) external returns (bool)',
-  'function allowance(address owner, address spender) external view returns (uint256)',
-];
+// ERC-20 ABI는 별도 파일에서 import
 
 /**
  * 현재 네트워크에 따른 테스트 컨트랙트 반환

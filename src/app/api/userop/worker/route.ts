@@ -10,6 +10,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { UserOpQueue, type QueuedUserOp, type UserOpResult } from "@/lib/redis/queue";
 import { getAppConfig, getNetworkConfig, getContractAddresses } from "@/config/environment";
+import { EntryPointV08ABI } from "@/lib/aa/abi/EntryPointV08";
 
 // Runtime 설정
 export const runtime = "nodejs";
@@ -20,33 +21,7 @@ const appConfig = getAppConfig();
 const networkConfig = getNetworkConfig();
 const contractAddresses = getContractAddresses();
 
-// EntryPoint ABI (필요한 함수만)
-const ENTRY_POINT_ABI = [
-  {
-    type: 'function',
-    name: 'handleOps',
-    inputs: [
-      {
-        name: 'ops',
-        type: 'tuple[]',
-        components: [
-          { name: 'sender', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'initCode', type: 'bytes' },
-          { name: 'callData', type: 'bytes' },
-          { name: 'accountGasLimits', type: 'bytes32' },
-          { name: 'preVerificationGas', type: 'uint256' },
-          { name: 'gasFees', type: 'bytes32' },
-          { name: 'paymasterAndData', type: 'bytes' },
-          { name: 'signature', type: 'bytes' }
-        ]
-      },
-      { name: 'beneficiary', type: 'address' }
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable'
-  }
-] as const;
+// EntryPoint ABI - handleOps 함수만 (최소 ABI 사용)
 
 // viem clients 설정
 const publicClient = createPublicClient({
@@ -93,7 +68,7 @@ async function processBatch(batch: QueuedUserOp[]): Promise<UserOpResult[]> {
     // EntryPoint 컨트랙트로 handleOps 호출
     const txHash = await walletClient.writeContract({
       address: contractAddresses.entryPointAddress,
-      abi: ENTRY_POINT_ABI,
+      abi: EntryPointV08ABI,
       functionName: 'handleOps',
       args: [userOps, bundlerAccount.address]
     });

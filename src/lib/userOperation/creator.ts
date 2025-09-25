@@ -19,6 +19,7 @@ import { DeploymentValidator } from '../aa/services/DeploymentValidator';
 import { MyAccountFactoryABI } from '../aa/abi/SimpleAccountFactory';
 import { DeploymentTracker } from '../aa/utils/DeploymentTracker';
 import { MyAccountABI } from '../aa/abi/SimpleAccount';
+import { EntryPointV08ABI } from '../aa/abi/EntryPointV08';
 import { IUserOperationBuilder } from '../aa/interfaces';
 
 export class UserOperationCreator implements IUserOperationBuilder {
@@ -47,17 +48,7 @@ export class UserOperationCreator implements IUserOperationBuilder {
     // Get nonce from EntryPoint
     const nonce = await this.publicClient.readContract({
       address: this.entryPointAddress,
-      abi: [
-        {
-          type: 'function',
-          name: 'getNonce',
-          inputs: [
-            { name: 'sender', type: 'address' },
-            { name: 'key', type: 'uint192' }
-          ],
-          outputs: [{ name: 'nonce', type: 'uint256' }]
-        }
-      ],
+      abi: EntryPointV08ABI,
       functionName: 'getNonce',
       args: [smartAccountInfo.address, BigInt(0)]
     });
@@ -165,17 +156,7 @@ export class UserOperationCreator implements IUserOperationBuilder {
     // Get nonce
     const nonce = await this.publicClient.readContract({
       address: this.entryPointAddress,
-      abi: [
-        {
-          type: 'function',
-          name: 'getNonce',
-          inputs: [
-            { name: 'sender', type: 'address' },
-            { name: 'key', type: 'uint192' }
-          ],
-          outputs: [{ name: 'nonce', type: 'uint256' }]
-        }
-      ],
+      abi: EntryPointV08ABI,
       functionName: 'getNonce',
       args: [smartAccountInfo.address, BigInt(0)]
     });

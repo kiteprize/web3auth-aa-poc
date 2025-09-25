@@ -1,85 +1,85 @@
-// ERC-4337 v0.8 EntryPoint ABI
+// ERC-4337 v0.8 EntryPoint ABI - 안정적인 직접 정의 방식
 
 export const EntryPointV08ABI = [
   {
-    type: 'function',
-    name: 'handleOps',
+    type: 'function' as const,
+    name: 'handleOps' as const,
     inputs: [
       {
-        name: 'ops',
-        type: 'tuple[]',
+        name: 'ops' as const,
+        type: 'tuple[]' as const,
         components: [
-          { name: 'sender', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'initCode', type: 'bytes' },
-          { name: 'callData', type: 'bytes' },
-          { name: 'accountGasLimits', type: 'bytes32' },
-          { name: 'preVerificationGas', type: 'uint256' },
-          { name: 'gasFees', type: 'bytes32' },
-          { name: 'paymasterAndData', type: 'bytes' },
-          { name: 'signature', type: 'bytes' }
-        ]
+          { name: 'sender' as const, type: 'address' as const },
+          { name: 'nonce' as const, type: 'uint256' as const },
+          { name: 'initCode' as const, type: 'bytes' as const },
+          { name: 'callData' as const, type: 'bytes' as const },
+          { name: 'accountGasLimits' as const, type: 'bytes32' as const },
+          { name: 'preVerificationGas' as const, type: 'uint256' as const },
+          { name: 'gasFees' as const, type: 'bytes32' as const },
+          { name: 'paymasterAndData' as const, type: 'bytes' as const },
+          { name: 'signature' as const, type: 'bytes' as const }
+        ] as const
       },
-      { name: 'beneficiary', type: 'address' }
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable'
+      { name: 'beneficiary' as const, type: 'address' as const }
+    ] as const,
+    outputs: [] as const,
+    stateMutability: 'nonpayable' as const
   },
   {
-    type: 'function',
-    name: 'getUserOpHash',
+    type: 'function' as const,
+    name: 'getUserOpHash' as const,
     inputs: [
       {
-        name: 'userOp',
-        type: 'tuple',
+        name: 'userOp' as const,
+        type: 'tuple' as const,
         components: [
-          { name: 'sender', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'initCode', type: 'bytes' },
-          { name: 'callData', type: 'bytes' },
-          { name: 'accountGasLimits', type: 'bytes32' },
-          { name: 'preVerificationGas', type: 'uint256' },
-          { name: 'gasFees', type: 'bytes32' },
-          { name: 'paymasterAndData', type: 'bytes' },
-          { name: 'signature', type: 'bytes' }
-        ]
+          { name: 'sender' as const, type: 'address' as const },
+          { name: 'nonce' as const, type: 'uint256' as const },
+          { name: 'initCode' as const, type: 'bytes' as const },
+          { name: 'callData' as const, type: 'bytes' as const },
+          { name: 'accountGasLimits' as const, type: 'bytes32' as const },
+          { name: 'preVerificationGas' as const, type: 'uint256' as const },
+          { name: 'gasFees' as const, type: 'bytes32' as const },
+          { name: 'paymasterAndData' as const, type: 'bytes' as const },
+          { name: 'signature' as const, type: 'bytes' as const }
+        ] as const
       }
-    ],
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view'
+    ] as const,
+    outputs: [{ name: '' as const, type: 'bytes32' as const }] as const,
+    stateMutability: 'view' as const
   },
   {
-    type: 'function',
-    name: 'getNonce',
+    type: 'function' as const,
+    name: 'getNonce' as const,
     inputs: [
-      { name: 'sender', type: 'address' },
-      { name: 'key', type: 'uint192' }
-    ],
-    outputs: [{ name: 'nonce', type: 'uint256' }],
-    stateMutability: 'view'
+      { name: 'sender' as const, type: 'address' as const },
+      { name: 'key' as const, type: 'uint192' as const }
+    ] as const,
+    outputs: [{ name: 'nonce' as const, type: 'uint256' as const }] as const,
+    stateMutability: 'view' as const
   },
   {
-    type: 'function',
-    name: 'simulateValidation',
+    type: 'function' as const,
+    name: 'simulateValidation' as const,
     inputs: [
       {
-        name: 'userOp',
-        type: 'tuple',
+        name: 'userOp' as const,
+        type: 'tuple' as const,
         components: [
-          { name: 'sender', type: 'address' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'initCode', type: 'bytes' },
-          { name: 'callData', type: 'bytes' },
-          { name: 'accountGasLimits', type: 'bytes32' },
-          { name: 'preVerificationGas', type: 'uint256' },
-          { name: 'gasFees', type: 'bytes32' },
-          { name: 'paymasterAndData', type: 'bytes' },
-          { name: 'signature', type: 'bytes' }
-        ]
+          { name: 'sender' as const, type: 'address' as const },
+          { name: 'nonce' as const, type: 'uint256' as const },
+          { name: 'initCode' as const, type: 'bytes' as const },
+          { name: 'callData' as const, type: 'bytes' as const },
+          { name: 'accountGasLimits' as const, type: 'bytes32' as const },
+          { name: 'preVerificationGas' as const, type: 'uint256' as const },
+          { name: 'gasFees' as const, type: 'bytes32' as const },
+          { name: 'paymasterAndData' as const, type: 'bytes' as const },
+          { name: 'signature' as const, type: 'bytes' as const }
+        ] as const
       }
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable'
+    ] as const,
+    outputs: [] as const,
+    stateMutability: 'nonpayable' as const
   }
 ] as const;
 

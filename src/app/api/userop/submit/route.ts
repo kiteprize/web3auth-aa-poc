@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPublicClient, getContract, http } from "viem";
 import { UserOpQueue, type QueuedUserOp } from "@/lib/redis/queue";
 import { TransactionExecutor } from "@/lib/userOperation";
-import { getNetworkConfig, getContractAddresses } from "@/config/environment";
+import { getNetworkConfig, getContractAddresses, getApiBaseUrl } from "@/config/environment";
+import { EntryPointV08ABI } from "@/lib/aa/abi/EntryPointV08";
 
 // Runtime 설정
 export const runtime = "nodejs";
@@ -20,55 +21,7 @@ const publicClient = createPublicClient({
   transport: http(networkConfig.rpcUrl),
 });
 
-// EntryPoint ABI (필요한 함수만)
-const ENTRY_POINT_ABI = [
-  {
-    type: "function",
-    name: "simulateValidation",
-    inputs: [
-      {
-        name: "userOp",
-        type: "tuple",
-        components: [
-          { name: "sender", type: "address" },
-          { name: "nonce", type: "uint256" },
-          { name: "initCode", type: "bytes" },
-          { name: "callData", type: "bytes" },
-          { name: "accountGasLimits", type: "bytes32" },
-          { name: "preVerificationGas", type: "uint256" },
-          { name: "gasFees", type: "bytes32" },
-          { name: "paymasterAndData", type: "bytes" },
-          { name: "signature", type: "bytes" },
-        ],
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "getUserOpHash",
-    inputs: [
-      {
-        name: "userOp",
-        type: "tuple",
-        components: [
-          { name: "sender", type: "address" },
-          { name: "nonce", type: "uint256" },
-          { name: "initCode", type: "bytes" },
-          { name: "callData", type: "bytes" },
-          { name: "accountGasLimits", type: "bytes32" },
-          { name: "preVerificationGas", type: "uint256" },
-          { name: "gasFees", type: "bytes32" },
-          { name: "paymasterAndData", type: "bytes" },
-          { name: "signature", type: "bytes" },
-        ],
-      },
-    ],
-    outputs: [{ name: "", type: "bytes32" }],
-    stateMutability: "view",
-  },
-] as const;
+// EntryPoint ABI - simulateValidation, getUserOpHash 함수만 (최소 ABI 사용)
 
 // 문자열로 받은 BigInt 필드들을 BigInt로 변환
 function deserializeUserOperation(op: any): any {
@@ -116,7 +69,7 @@ function validateUserOpShape(op: any): void {
 }
 
 export async function POST(req: NextRequest) {
-  const transactionExecutor = new TransactionExecutor();
+  const transactionExecutor = new TransactionExecutor(getApiBaseUrl());
   try {
     // 요청 파싱 및 역직렬화
     const {
@@ -149,7 +102,7 @@ export async function POST(req: NextRequest) {
       try {
         await publicClient.simulateContract({
           address: contractAddresses.entryPointAddress,
-          abi: ENTRY_POINT_ABI,
+          abi: EntryPointV08ABI,
           functionName: "simulateValidation",
           args: [userOp],
         });
@@ -177,7 +130,7 @@ export async function POST(req: NextRequest) {
     // UserOpHash 계산
     const entryPointRead = getContract({
       address: contractAddresses.entryPointAddress,
-      abi: ENTRY_POINT_ABI,
+      abi: EntryPointV08ABI,
       client: publicClient,
     });
     const userOpHash = await entryPointRead.read.getUserOpHash([userOp]);

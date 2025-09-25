@@ -8,6 +8,8 @@ import {
 import { type SmartAccountInfo } from '../aa/types';
 import { ISmartAccountService } from '../aa/interfaces';
 import { MyAccountFactoryABI } from '../aa/abi/SimpleAccountFactory';
+import { MyAccountABI } from '../aa/abi/SimpleAccount';
+import { EntryPointV08ABI } from '../aa/abi/EntryPointV08';
 import { SaltManager } from '../aa/utils/SaltManager';
 import { DeploymentValidator } from '../aa/services/DeploymentValidator';
 
@@ -81,17 +83,7 @@ export class SmartAccountManager implements ISmartAccountService {
       // EntryPoint에서 nonce 조회
       const nonce = await this.publicClient.readContract({
         address: this.entryPointAddress,
-        abi: [
-          {
-            type: 'function',
-            name: 'getNonce',
-            inputs: [
-              { name: 'sender', type: 'address' },
-              { name: 'key', type: 'uint192' }
-            ],
-            outputs: [{ name: 'nonce', type: 'uint256' }]
-          }
-        ],
+        abi: EntryPointV08ABI,
         functionName: 'getNonce',
         args: [accountAddress, BigInt(0)]
       });
@@ -141,14 +133,7 @@ export class SmartAccountManager implements ISmartAccountService {
       // 배포된 계정은 실제 owner를 조회
       const actualOwner = await this.publicClient.readContract({
         address: accountAddress,
-        abi: [
-          {
-            type: 'function',
-            name: 'owner',
-            inputs: [],
-            outputs: [{ name: '', type: 'address' }]
-          }
-        ],
+        abi: MyAccountABI,
         functionName: 'owner'
       });
 
