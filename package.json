@@ -8,7 +8,13 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "contract:poc": "node scripts/poc-simple.js"
+    "contract:poc": "node scripts/poc-simple.js",
+    "deploy:factory:bsc-testnet": "NETWORK=bscTestnet node scripts/deploy-factory-only.js",
+    "deploy:factory:bsc-mainnet": "NETWORK=bscMainnet node scripts/deploy-factory-only.js",
+    "deploy:factory:polygon-amoy": "NETWORK=polygonAmoy node scripts/deploy-factory-only.js",
+    "verify:polygon-amoy": "npx hardhat verify etherscan --network polygonAmoy",
+    "verify:bsc-testnet": "npx hardhat verify etherscan --network bscTestnet",
+    "verify:bsc-mainnet": "npx hardhat verify etherscan --network bscMainnet"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.8.0",

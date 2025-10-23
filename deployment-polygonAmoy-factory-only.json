@@ -1,0 +1,10 @@
+{
+  "network": "polygonAmoy",
+  "chainId": 80002,
+  "contracts": {
+    "MyAccountFactory": "0x86e92ad8945348ef81d21bd2cc1caea9a5f6146f",
+    "EntryPoint": "0x4337084d9e255ff0702461cf8895ce9e3b5ff108"
+  },
+  "deployer": "0xe3Fd4a6740DF87c40CB1bfa4Dc48B4372fBF866D",
+  "timestamp": "2025-10-23T07:38:26.366Z"
+}
